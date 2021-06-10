@@ -38,6 +38,7 @@ const readDB = () => {
     const getAll = store.getAll();
 
     getAll.onsuccess = function() {
+        console.log(getAll.result)
         if (getAll.result.length > 0) {
           fetch("/api/transaction/bulk", {
             method: "POST",
@@ -56,4 +57,6 @@ const readDB = () => {
         }
     };
 }
+
+window.addEventListener('online', readDB);
 
