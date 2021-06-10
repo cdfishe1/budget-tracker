@@ -57,7 +57,6 @@ self.addEventListener("fetch", function (event) {
               return response;
             })
             .catch(err => {
-              // Network request failed, try to get it from the cache.
               return cache.match(event.request);
             });
         }).catch(err => console.log(err))
