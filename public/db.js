@@ -13,7 +13,6 @@ request.onupgradeneeded = function(event) {
 //create success event
 request.onsuccess = function(event) {
     db = event.target.result;
-  
     // checks if site is online before reading database
     if (navigator.onLine) {
       readDB();
@@ -26,8 +25,35 @@ request.onerror = function(event) {
 };
 
 //create method to save record to pending store
-function saveRecord(record) {
+const saveRecord = record => {
     const tx = db.transaction(["pending"], "readwrite");
     const store = tx.objectStore("pending");
     store.add(record);
 };
+
+//reads the database and on success writes record to the pending store
+const readDB = () => {
+    const tx = db.transaction(["pending"], "readwrite");
+    const store = tx.objectStore("pending");
+    const getAll = store.getAll();
+
+    getAll.onsuccess = function() {
+        if (getAll.result.length > 0) {
+          fetch("/api/transaction/bulk", {
+            method: "POST",
+            body: JSON.stringify(getAll.result),
+            headers: {
+              Accept: "application/json, text/plain, */*",
+              "Content-Type": "application/json"
+            }
+          })
+          .then(response => response.json())
+          .then(() => {
+            const tx = db.transaction(["pending"], "readwrite");
+            const store = tx.objectStore("pending");
+            store.clear();
+          });
+        }
+    };
+}
+
