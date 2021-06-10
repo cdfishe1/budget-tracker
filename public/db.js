@@ -16,11 +16,18 @@ request.onsuccess = function(event) {
   
     // checks if site is online before reading database
     if (navigator.onLine) {
-      checkDatabase();
+      readDB();
     }
 };
 
 //create error event 
 request.onerror = function(event) {
     console.log(event.target.errorCode);
+};
+
+//create method to save record to pending store
+function saveRecord(record) {
+    const tx = db.transaction(["pending"], "readwrite");
+    const store = tx.objectStore("pending");
+    store.add(record);
 };
