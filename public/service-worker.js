@@ -42,3 +42,39 @@ self.addEventListener("activate", function (event) {
     self.clients.claim();
 });
 
+// fetch listener for service worker
+self.addEventListener("fetch", function (event) {
+    if (event.request.url.includes("/api/")) {
+      event.respondWith(
+        caches.open(DATA_CACHE_NAME).then(cache => {
+          return fetch(event.request)
+            .then(response => {
+              // clones catch if response was good
+              if (response.status === 200) {
+                cache.put(event.request.url, response.clone());
+              }
+  
+              return response;
+            })
+            .catch(err => {
+              // Network request failed, try to get it from the cache.
+              return cache.match(event.request);
+            });
+        }).catch(err => console.log(err))
+      );
+  
+      return;
+    }
+  
+    event.respondWith(
+      fetch(event.request).catch(function () {
+        return caches.match(event.request).then(function (response) {
+          if (response) {
+            return response;
+          } else if (event.request.headers.get("accept").includes("text/html")) {
+            return caches.match("/");
+          }
+        });
+      })
+    );
+});
